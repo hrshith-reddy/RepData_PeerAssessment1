@@ -4,7 +4,8 @@
 ##Loading and preprocessing the data
 
 
-```{r,message=FALSE}
+
+```r
 download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip",destfile="./Activity") # Downloading the required file
 
 if(!dir.exists("./data")) #creating a new directory data to store the csv file
@@ -26,51 +27,83 @@ library("dplyr") #loading the dplyr package
 ##Histogram of the total number of steps taken each day
 
 
-```{r}
+
+```r
 histdata<-group_by(data,date)%>%summarise(totalsteps=sum(steps,na.rm=T))%>%filter(totalsteps!=0) # mutating the data into a required format
 
 qplot(histdata$totalsteps,bins=50,fill=I("green"),col=I("blue"),xlab="Total number of steps in a  day",main="histogram of total number of steps in a day") # constructing the required histogram
 ```
+
+![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2-1.png)
 
 
 ##What is mean/median total number of steps taken per day?
 
 
 
-```{r}
-mean(histdata$totalsteps) # average number of steps taken in a day
 
+```r
+mean(histdata$totalsteps) # average number of steps taken in a day
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(histdata$totalsteps) # median number of steps taken in a day
+```
+
+```
+## [1] 10765
 ```
 
 
 ##What is the average daily activity pattern?
 
 
-```{r}
+
+```r
 timeseries<-group_by(data,interval)%>%summarise(dailyaverage=mean(steps,na.rm=T)) # mutating the data into a form suitable for the timeseries
 
 ggplot(timeseries,aes(interval,dailyaverage))+geom_line(aes(col=I("orange")),size=1)+xlab("5 minute intervals")+ylab("number of steps averaged over all the days")+ggtitle("Time-Series of the number of steps") # constructing the time series plot
 ```
 
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png)
+
 
 ##The 5-minute interval that, on average, contains the maximum number of steps
 
 
-```{r}
+
+```r
 timeseries<-arrange(timeseries,desc(dailyaverage)) #arranging the time intervals in decreasing order of average number of steps
 
 timeseries[1,1] # the interval with maximum number of steps on an average
 ```
 
+```
+## # A tibble: 1 x 1
+##   interval
+##      <int>
+## 1      835
+```
+
 ##Imputing missing values
 
 
-```{r}
+
+```r
 missing<-is.na(data$steps)# to find missing values
 
 sum(missing)# number of missing values
+```
 
+```
+## [1] 2304
+```
+
+```r
 fix<-grep(T,missing) # positions of missing values
 
 newdataset<-data # creating a replica of the dataset to fill the missing values with sensible values
@@ -85,22 +118,37 @@ for(f in fix) # we shall replace the missing value with the average value for th
 ##Histogram of the total number of steps taken each day after missing values are imputed
 
 
-```{r}
+
+```r
 histdata<-group_by(newdataset,date)%>%summarise(totalsteps=sum(steps,na.rm=T))%>%filter(totalsteps!=0) # mutating the new data set in order to convert it to a form suitable for histogram construction
 
 qplot(histdata$totalsteps,bins=50,fill=I("green"),col=I("blue"),xlab="Total number of steps in a day",main="histogram of total number of steps in a day") # constructing the histogram
+```
 
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png)
+
+```r
 mean(histdata$totalsteps) # new mean after imputing values is the same as old mean
+```
 
+```
+## [1] 10766.19
+```
+
+```r
 median(histdata$totalsteps) # new median after imputing value exceeds the older median by a miniscule amount 
+```
 
+```
+## [1] 10766.19
 ```
 
 
 ##Are there differences in activity patterns between weekdays and weekends?
 
 
-```{r}
+
+```r
 newdataset<-mutate(newdataset,day=as.character(format(newdataset$date,"%A"))) # mutating the new data set in order to include the comlumn of day
   
 for(d in 1:nrow(newdataset)) # classifying the days of the new data set into weekdays and weekends
@@ -123,5 +171,7 @@ newtimeseries<-group_by(newdataset,day,interval)%>%summarise(dailyaverage=mean(s
 
 ggplot(newtimeseries,aes(interval,dailyaverage))+geom_line(aes(col=day),)+facet_grid(day~.)+ylab("Number of steps taken")+ggtitle("Time series of number of steps") #constructing the time series plot for weekends and weekdays separately
 ```
+
+![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8-1.png)
   
   
